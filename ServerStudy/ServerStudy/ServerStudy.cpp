@@ -3,45 +3,42 @@
 #include <Ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 
 void err_display(char *msg);
 
-constexpr int SERVERPORT = 23451;
-constexpr int BUFFERSIZE = 255;
+constexpr int SERVERPORT = 23452;
+constexpr int BUFFERSIZE = 511;
 
 int main()
 {
-	//winsock은 반드시 WSAStartup을 해야한다.
-	WSADATA wsa;
 	int result;
+
+	// 윈속 초기화
+	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		return 1;
 
 	// socket()
 	SOCKET listen_sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (listen_sock == INVALID_SOCKET)
-		err_display("socket() error");
+	if (listen_sock == INVALID_SOCKET) err_display("socket()");
 
 	// bind()
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serveraddr.sin_port = htonl(SERVERPORT);
-	
+	serveraddr.sin_port = htons(SERVERPORT);
 	result = bind(listen_sock, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
-	if (result == SOCKET_ERROR)
-		err_display("bind() error");
+	if (result == SOCKET_ERROR) err_display("bind()");
 
 	// listen()
 	result = listen(listen_sock, SOMAXCONN);
-	if (result == SOCKET_ERROR)
-		err_display("listen() error");
+	if (result == SOCKET_ERROR) {
+		err_display("listen()");
+	}
 
-
-
-
-// 데이터 통신에 사용할 변수
+	// 데이터 통신에 사용할 변수
 	SOCKET client_sock;
 	SOCKADDR_IN clientaddr;
 	int addrlen;
