@@ -173,7 +173,7 @@ namespace NServerNetLib
 		memcpy(&session.pSendBuffer[pos], (char*)&pktHeader, PACKET_HEADER_SIZE);
 		memcpy(&session.pSendBuffer[pos + PACKET_HEADER_SIZE], pMsg, size);
 		session.SendSize += (size + PACKET_HEADER_SIZE);
-
+		
 		return NET_ERROR_CODE::NONE;
 	}
 

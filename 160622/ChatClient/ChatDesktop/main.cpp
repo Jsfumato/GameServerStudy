@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <thread>
 #include "MainForm.h"
 
 int main()
@@ -9,6 +9,8 @@ int main()
 	mainForm.Init();
 
 	mainForm.CreateGUI();
-
+	
 	mainForm.ShowModal();
+
+	return 0;
 }

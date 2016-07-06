@@ -32,7 +32,7 @@ public:
 		m_Porttxt->caption("23452");
 
 		m_Connectbtn = std::make_shared<button>((form&)*m_pForm, nana::rectangle(283, 14, 102, 23));
-		m_Connectbtn->caption("Connent");
+		m_Connectbtn->caption("Connect");
 		m_Connectbtn->events().click([&]() {
 			this->ConnectOrDisConnect();
 		});
@@ -54,6 +54,10 @@ public:
 			this->LogInOut();
 		});
 		m_Loginbtn->enabled(false);
+
+		m_ptxtCurState = std::make_unique<textbox>((form&)*m_pForm, nana::rectangle(450, 15, 120, 20));
+		m_ptxtCurState->caption("State: Disconnect");
+		m_ptxtCurState->bgcolor(nana::color(255, 0, 0));
 	}
 
 
@@ -81,6 +85,25 @@ public:
 				}
 			}
 			break;
+
+		case (short)PACKET_ID::LOGIN_OUT_RES:
+		{
+			auto pktRes = (NCommon::PktLogOutRes*)pData;
+
+			if (pktRes->ErrorCode == (short)NCommon::ERROR_CODE::NONE)
+			{
+				m_Loginbtn->caption("LogIn");
+				SetCurSceenType(CLIENT_SCEEN_TYPE::CONNECT);
+			}
+			else
+			{
+				nana::msgbox m((form&)*m_pForm, "Fail LOGIN_OUT_REQ", nana::msgbox::ok);
+				m.icon(m.icon_warning);
+				m << "ErrorCode: " << pktRes->ErrorCode;
+				m.show();
+			}
+		}
+
 		default:
 			return false;
 		}
@@ -101,6 +124,8 @@ private:
 			if (m_pRefNetwork->ConnectTo(szIP, (unsigned short)m_Porttxt->to_int()))
 			{
 				m_Connectbtn->caption("DisConnect");
+				m_ptxtCurState->caption("State: Connect");
+				m_ptxtCurState->bgcolor(nana::color(0, 255, 0));
 				m_Loginbtn->enabled(true);
 			}
 			else
@@ -117,6 +142,8 @@ private:
 			m_pRefNetwork->DisConnect();
 			
 			m_Connectbtn->caption("Connect");
+			m_ptxtCurState->caption("State: Disconnect");
+			m_ptxtCurState->bgcolor(nana::color(255, 0, 0));
 			m_Loginbtn->enabled(false);
 		}
 
@@ -137,14 +164,37 @@ private:
 			strncpy_s(reqPkt.szPW, NCommon::MAX_USER_PASSWORD_SIZE + 1, szPW, NCommon::MAX_USER_PASSWORD_SIZE);
 
 			m_pRefNetwork->SendPacket((short)PACKET_ID::LOGIN_IN_REQ, sizeof(reqPkt), (char*)&reqPkt);
+			m_ptxtCurState->caption("State: Log in");
+			m_ptxtCurState->bgcolor(nana::color(255, 255, 0));
 
-			m_Loginbtn->enabled(false);
+			m_IsLogined = true;
+			//m_Loginbtn->enabled(false);
 		}
 		else
 		{
-			nana::msgbox m((form&)*m_pForm, "Unimplemented", nana::msgbox::ok);
+			// log out 기능 구현
+
+			// 아래 코드는 에러 박스 띄우기
+			/*nana::msgbox m((form&)*m_pForm, "Unimplemented", nana::msgbox::ok);
 			m.icon(m.icon_warning);
-			m.show();
+			m.show();*/
+
+			NCommon::PktLogOutReq reqPkt;
+
+			char szID[64] = { 0, };
+			UnicodeToAnsi(m_IDtxt->caption_wstring().c_str(), 64, szID);
+
+			char szPW[64] = { 0, };
+			UnicodeToAnsi(m_PWtxt->caption_wstring().c_str(), 64, szPW);
+			
+			std::copy(&szID[0], &szID[NCommon::MAX_USER_ID_SIZE-1], &reqPkt.szID[0]);
+			std::copy(&szPW[0], &szPW[NCommon::MAX_USER_PASSWORD_SIZE-1], &reqPkt.szPW[0]);
+			m_pRefNetwork->SendPacket((short)PACKET_ID::LOGIN_OUT_REQ, sizeof(reqPkt), (char*)&reqPkt);
+
+			m_ptxtCurState->caption("State: Connected");
+			m_ptxtCurState->bgcolor(nana::color(255, 0, 0));
+
+			m_IsLogined = false;
 		}
 	}
 
@@ -169,4 +219,8 @@ private:
 	std::shared_ptr<textbox> m_PWtxt;
 
 	std::shared_ptr<button> m_Loginbtn;
+
+
+
+	std::unique_ptr<textbox> m_ptxtCurState;
 };

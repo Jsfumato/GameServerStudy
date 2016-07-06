@@ -11,11 +11,12 @@
 
 #include "Define.h"
 #include "ServerErrorCode.h"
+#include "ITCPServer.h"
 #include "ILog.h"
 
-namespace ServerNetworkLib {
-
-	class TCPServer
+namespace ServerNetworkLib
+{
+	class TCPServer : public ITCPServer
 	{
 	public:
 		TCPServer() = default;
@@ -34,6 +35,8 @@ namespace ServerNetworkLib {
 		void ConnectSession(int sessionIndex, int clientSocket, const char* clientIP);
 		void CloseSession(const SOCKET_CLOSE_CASE closeCase, const SOCKET sockFD, const int sessionIndex);
 		void AddPacketQueue(const int sessionIndex, const short pktId, const short bodySize, char* pDataPos);
+
+		void SetSockOption(const SOCKET fd);
 
 		// º¯¼ö
 		ServerConfig	serverConfig;

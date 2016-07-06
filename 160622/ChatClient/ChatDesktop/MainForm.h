@@ -35,6 +35,8 @@ public:
 
 	void CreateGUI();
 
+	void Update();
+
 	void ShowModal();
 
 
@@ -52,7 +54,7 @@ private:
 
 	timer m_timer;
 
-	std::unique_ptr<textbox> m_ptxtCurState;
+	/*std::unique_ptr<textbox> m_ptxtCurState;*/
 	
 	std::shared_ptr<listbox> m_RoomUserList;
 

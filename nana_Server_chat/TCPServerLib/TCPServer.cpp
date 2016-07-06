@@ -39,7 +39,6 @@ namespace ServerNetworkLib
 			return NET_ERROR_CODE::SERVER_SOCKET_LISTEN_FAIL;
 
 		// TCPServer가 멤버변수로 갖고 있는 fd_set을 초기화해줍니다
-		// 
 		FD_ZERO(&read_set);
 		FD_SET(serverSocket, &read_set);
 
@@ -130,7 +129,7 @@ namespace ServerNetworkLib
 				auto& session = clientSessionPool[iter.Index];
 				SOCKET clientSocket = session.SocketFD;
 
-				if (session.IsConnected == false)
+				if (session.IsConnected() == false)
 					continue;
 
 				// 새로 받을 위치는 session에 아직 패킷이 되지 못하고 남아있는 데이터 바로 뒤입니다.
@@ -153,9 +152,6 @@ namespace ServerNetworkLib
 				// 남은 데이터 사이즈를 갱신
 				session.RemainingDataSize += recvSize;
 
-				/*
-					FindThis
-				*/
 				// 각 session의 recvBuffer에 저장된 내용을 packet으로 변경한다.
 				int readPos = 0;
 				const int dataSize = session.RemainingDataSize;
@@ -170,6 +166,9 @@ namespace ServerNetworkLib
 					{
 						if (pktHeader->BodySize > (dataSize - readPos))
 						{
+							// 헤더에 기록된 body 사이즈가 현재 남은 데이터보다 많다?!
+							// 아직 모두 도착한게 아니니 다시 readPos를 되돌린다
+							readPos -= PACKET_HEADER_SIZE;
 							break;
 						}
 						if (pktHeader->BodySize > MAX_PACKET_SIZE)
@@ -182,15 +181,13 @@ namespace ServerNetworkLib
 
 					readPos += pktHeader->BodySize;
 				}
-
-
 				continue;
 			}
 
 			// write 가능한 client에게는 send함수 호출
 			if (FD_ISSET(iter.SocketFD, &writefd))
 			{
-				if (iter.IsConnected == false)
+				if (iter.IsConnected() == false)
 					CloseSession(SOCKET_CLOSE_CASE::SOCKET_SEND_ERROR, iter.SocketFD, iter.Index);
 
 				if (iter.SendSize <= 0)
@@ -250,7 +247,7 @@ namespace ServerNetworkLib
 	void TCPServer::CloseSession(const SOCKET_CLOSE_CASE closeCase, const SOCKET sockFD, const int sessionIndex)
 	{
 		// 먼저 그 사이에 연결이 끊어지지는 않았는지 확인합니다
-		if (clientSessionPool[sessionIndex].IsConnected == false)
+		if (clientSessionPool[sessionIndex].IsConnected() == false)
 			return;
 
 		// sessionIndex가 존재하는 index라면, 해당 session을 정리합니다
@@ -275,5 +272,16 @@ namespace ServerNetworkLib
 		recvPacket.pRefData = pDataPos;
 
 		packetQueue.push_back(recvPacket);
+	}
+	void TCPServer::SetSockOption(const SOCKET fd)
+	{
+		linger ling;
+		ling.l_onoff = 0;
+		ling.l_linger = 0;
+		setsockopt(fd, SOL_SOCKET, SO_LINGER, (char*)&ling, sizeof(ling));
+
+		int size1 = serverConfig.MaxClientSockOptRecvBufferSize;
+		int size2 = serverConfig.MaxClientSockOptSendBufferSize;
+		//## find this
 	}
 }

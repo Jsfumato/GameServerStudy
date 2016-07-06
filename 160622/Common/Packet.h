@@ -29,6 +29,19 @@ namespace NCommon
 
 	struct PktLogInRes : PktBase
 	{
+
+	};
+
+	//- 로그 아웃 요청!
+	struct PktLogOutReq
+	{
+		char szID[MAX_USER_ID_SIZE + 1] = { 0, };
+		char szPW[MAX_USER_PASSWORD_SIZE + 1] = { 0, };
+	};
+
+	struct PktLogOutRes : PktBase
+	{
+
 	};
 
 

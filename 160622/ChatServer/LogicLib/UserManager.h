@@ -40,6 +40,5 @@ namespace NLogicLib
 
 		std::unordered_map<int, User*> m_UserSessionDic;
 		std::unordered_map<const char*, User*> m_UserIDDic; //char*는 key로 사용못함
-
 	};
 }
