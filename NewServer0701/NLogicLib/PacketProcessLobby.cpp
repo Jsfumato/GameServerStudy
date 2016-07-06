@@ -76,7 +76,7 @@ namespace NLogicLib
 
 		auto pUser = std::get<1>(pUserRet);
 
-		if (pUser->IsCurDomainInLobby() == false) {
+		if ((pUser->IsCurDomainInLobby() == false) && (pUser->IsCurDomainInRoom() == false)) {
 			CHECK_ERROR(ERROR_CODE::LOBBY_ROOM_LIST_INVALID_DOMAIN);
 		}
 
@@ -185,6 +185,43 @@ namespace NLogicLib
 	CHECK_ERR:
 		resPkt.SetError(__result);
 		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::LOBBY_LEAVE_RES, sizeof(NCommon::PktLobbyLeaveRes), (char*)&resPkt);
+		return (ERROR_CODE)__result;
+	}
+
+	// roomChat을 응용하여 lobbyChat을 구현
+	ERROR_CODE PacketProcess::LobbyChat(PacketInfo packetInfo)
+	{
+	CHECK_START
+		auto reqPkt = (NCommon::PktLobbyChatReq*)packetInfo.pData;
+		NCommon::PktLobbyChatRes resPkt;
+
+		auto pUserRet = m_pUserManager->GetUser(packetInfo.sessionIndex);
+		auto errorCode = std::get<0>(pUserRet);
+
+		if (errorCode != ERROR_CODE::NONE) {
+			CHECK_ERROR(errorCode);
+		}
+
+		auto pUser = std::get<1>(pUserRet);
+
+		if (pUser->IsCurDomainInLobby() == false) {
+			CHECK_ERROR(ERROR_CODE::LOBBY_CHAT_INVALID_DOMAIN);
+		}
+
+		auto lobbyIndex = pUser->GetLobbyIndex();
+		auto pLobby = m_pLobbyManager->GetLobby(lobbyIndex);
+		if (pLobby == nullptr) {
+			CHECK_ERROR(ERROR_CODE::LOBBY_CHAT_INVALID_LOBBY_INDEX);
+		}
+
+		pLobby->NotifyChat(pUser->GetSessioIndex(), pUser->GetID().c_str(), reqPkt->Msg);
+
+		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::LOBBY_CHAT_RES, sizeof(resPkt), (char*)&resPkt);
+		return ERROR_CODE::NONE;
+
+	CHECK_ERR:
+		resPkt.SetError(__result);
+		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::LOBBY_CHAT_RES, sizeof(resPkt), (char*)&resPkt);
 		return (ERROR_CODE)__result;
 	}
 }

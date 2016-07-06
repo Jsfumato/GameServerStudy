@@ -194,13 +194,15 @@ private:
 			pPktHeader = (PacketHeader*)&m_RecvBuffer[readPos];
 			readPos += PACKET_HEADER_SIZE;
 
-			if (pPktHeader->BodySize < (dataSize - readPos))
+			if (pPktHeader->BodySize > (dataSize - readPos))
 			{
+				readPos -= PACKET_HEADER_SIZE;
 				break;
 			}
 
 			if (pPktHeader->BodySize > MAX_PACKET_SIZE)
 			{
+				readPos -= PACKET_HEADER_SIZE;
 				return;// NET_ERROR_CODE::RECV_CLIENT_MAX_PACKET;
 			}
 

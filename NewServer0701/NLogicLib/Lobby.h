@@ -44,6 +44,7 @@ namespace NLogicLib
 		Room* GetRoom(const short roomIndex);
 		void NotifyChangedRoomInfo(const short roomIndex);
 		Room * CreateRoom();
+		void NotifyChat(const int sessionIndex, const char * pszUserID, const wchar_t * pszMsg);
 		auto MaxUserCount() { return (short)m_MaxUserCount; }
 		auto MaxRoomCount() { return (short)m_RoomList.size(); }
 

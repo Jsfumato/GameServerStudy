@@ -17,7 +17,7 @@ namespace NLogicLib
 	CHECK_START
 		auto reqPkt = (NCommon::PktRoomEnterReq*)packetInfo.pData;
 		NCommon::PktRoomEnterRes resPkt;
-
+		
 		auto pUserRet = m_pUserManager->GetUser(packetInfo.sessionIndex);
 		auto errorCode = std::get<0>(pUserRet);
 
@@ -77,6 +77,7 @@ namespace NLogicLib
 		// 룸에 새 유저 들어왔다고 알린다
 		pRoom->NotifyEnterUserInfo(pUser->GetIndex(), pUser->GetID().c_str());
 		
+		resPkt.SetError(ERROR_CODE::NONE);
 		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::ROOM_ENTER_RES, sizeof(resPkt), (char*)&resPkt);
 		return ERROR_CODE::NONE;
 
