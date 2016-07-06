@@ -43,6 +43,7 @@ namespace NLogicLib
 		short GetIndex() { return m_LobbyIndex; }
 		Room* GetRoom(const short roomIndex);
 		void NotifyChangedRoomInfo(const short roomIndex);
+		Room * CreateRoom();
 		auto MaxUserCount() { return (short)m_MaxUserCount; }
 		auto MaxRoomCount() { return (short)m_RoomList.size(); }
 

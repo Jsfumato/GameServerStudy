@@ -6,8 +6,10 @@
 #include "Lobby.h"
 #include "LobbyManager.h"
 #include "PacketProcess.h"
+#include "../NServerNetLib/ILog.h"
 
 using PACKET_ID = NCommon::PACKET_ID;
+using LOG_TYPE = NServerNetLib::LOG_TYPE;
 
 namespace NLogicLib
 {
@@ -49,11 +51,13 @@ namespace NLogicLib
 		resPkt.MaxUserCount = pLobby->MaxUserCount();
 		resPkt.MaxRoomCount = pLobby->MaxRoomCount();
 		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::LOBBY_ENTER_RES, sizeof(NCommon::PktLobbyEnterRes), (char*)&resPkt);
+		m_pLogger->Write(LOG_TYPE::L_TRACE, "%s | Enter Lobby : %d", __FUNCTION__, packetInfo.sessionIndex);
 		return ERROR_CODE::NONE;
 
 	CHECK_ERR:
 		resPkt.SetError(__result);
 		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::LOBBY_ENTER_RES, sizeof(NCommon::PktLobbyEnterRes), (char*)&resPkt);
+		m_pLogger->Write(LOG_TYPE::L_ERROR, "%s | ERROR_CODE : %d", __FUNCTION__, resPkt.ErrorCode);
 		return (ERROR_CODE)__result;
 	}
 
@@ -83,13 +87,19 @@ namespace NLogicLib
 
 		auto reqPkt = (NCommon::PktLobbyRoomListReq*)packetInfo.pData;
 
-		pLobby->SendRoomList(pUser->GetSessioIndex(), reqPkt->StartRoomIndex);
+		auto sendRet = pLobby->SendRoomList(pUser->GetSessioIndex(), reqPkt->StartRoomIndex);
+		if (sendRet != ERROR_CODE::NONE) {
+			CHECK_ERROR(errorCode);
+		}
 
+		m_pLogger->Write(LOG_TYPE::L_TRACE, "%s | Req Lobby Room List : %d", __FUNCTION__, packetInfo.sessionIndex);
 		return ERROR_CODE::NONE;
+
 	CHECK_ERR :
 		NCommon::PktLobbyRoomListRes resPkt;
 		resPkt.SetError(__result);
 		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::LOBBY_ENTER_ROOM_LIST_RES, sizeof(NCommon::PktBase), (char*)&resPkt);
+		m_pLogger->Write(LOG_TYPE::L_ERROR, "%s | ERROR_CODE : %d", __FUNCTION__, resPkt.ErrorCode);
 		return (ERROR_CODE)__result;
 	}
 
@@ -119,13 +129,19 @@ namespace NLogicLib
 
 		auto reqPkt = (NCommon::PktLobbyUserListReq*)packetInfo.pData;
 
-		pLobby->SendUserList(pUser->GetSessioIndex(), reqPkt->StartUserIndex);
+		auto sendRet = pLobby->SendUserList(pUser->GetSessioIndex(), reqPkt->StartUserIndex);
+		if (sendRet != ERROR_CODE::NONE) {
+			CHECK_ERROR(errorCode);
+		}
 
+		m_pLogger->Write(LOG_TYPE::L_TRACE, "%s | Req Room User List : %d", __FUNCTION__, packetInfo.sessionIndex);
 		return ERROR_CODE::NONE;
+
 	CHECK_ERR:
 		NCommon::PktLobbyUserListRes resPkt;
 		resPkt.SetError(__result);
 		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::LOBBY_ENTER_USER_LIST_RES, sizeof(NCommon::PktBase), (char*)&resPkt);
+		m_pLogger->Write(LOG_TYPE::L_ERROR, "%s | ERROR_CODE : %d", __FUNCTION__, resPkt.ErrorCode);
 		return (ERROR_CODE)__result;
 	}
 	

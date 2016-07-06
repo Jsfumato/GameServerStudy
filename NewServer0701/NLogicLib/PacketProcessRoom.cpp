@@ -37,17 +37,26 @@ namespace NLogicLib
 			CHECK_ERROR(ERROR_CODE::ROOM_ENTER_INVALID_LOBBY_INDEX);
 		}
 		
-		auto pRoom = pLobby->GetRoom(reqPkt->RoomIndex);
-		if (pRoom == nullptr) {
-			CHECK_ERROR(ERROR_CODE::ROOM_ENTER_INVALID_ROOM_INDEX);
-		}
+		Room* pRoom = nullptr;
 
 		// 룸을 만드는 경우라면 룸을 만든다
-		if (reqPkt->IsCreate) 
+		if (reqPkt->IsCreate == true)
 		{
+			pRoom = pLobby->CreateRoom();
+			if (pRoom == nullptr) {
+				CHECK_ERROR(ERROR_CODE::ROOM_ENTER_EMPTY_ROOM);
+			}
+
 			auto ret = pRoom->CreateRoom(reqPkt->RoomTitle);
 			if (ret != ERROR_CODE::NONE) {
 				CHECK_ERROR(ret);
+			}
+		}
+		else
+		{
+			pRoom = pLobby->GetRoom(reqPkt->RoomIndex);
+			if (pRoom == nullptr) {
+				CHECK_ERROR(ERROR_CODE::ROOM_ENTER_INVALID_ROOM_INDEX);
 			}
 		}
 

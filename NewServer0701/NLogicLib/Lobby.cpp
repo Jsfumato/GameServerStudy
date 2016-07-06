@@ -264,4 +264,17 @@ namespace NLogicLib
 
 		SendToAllUser((short)PACKET_ID::ROOM_CHANGED_INFO_NTF, sizeof(pktNtf), (char*)&pktNtf);
 	}
+
+	Room* Lobby::CreateRoom()
+	{
+		//asdf
+		auto& findIter = std::find_if(m_RoomList.begin(), m_RoomList.end(),
+			[](auto& room) { return room.IsUsed() == false; });
+		
+		if (findIter == std::end(m_RoomList)) {
+			return nullptr;
+		}
+
+		return &(*findIter);
+	}
 }
