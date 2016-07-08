@@ -29,7 +29,6 @@ namespace NCommon
 
 	struct PktLogInRes : PktBase
 	{
-
 	};
 
 	//- ·Î±× ¾Æ¿ô ¿äÃ»!
@@ -189,6 +188,24 @@ namespace NCommon
 	};
 
 	struct PktRoomChatNtf
+	{
+		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
+		wchar_t Msg[MAX_ROOM_CHAT_MSG_SIZE + 1] = { 0, };
+	};
+
+
+	//- ·ë Ã¤ÆÃ
+	const int MAX_LOBBY_CHAT_MSG_SIZE = 256;
+	struct PktLobbyChatReq
+	{
+		wchar_t Msg[MAX_ROOM_CHAT_MSG_SIZE + 1] = { 0, };
+	};
+
+	struct PktLobbyChatRes : PktBase
+	{
+	};
+
+	struct PktLobbyChatNtf
 	{
 		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
 		wchar_t Msg[MAX_ROOM_CHAT_MSG_SIZE + 1] = { 0, };

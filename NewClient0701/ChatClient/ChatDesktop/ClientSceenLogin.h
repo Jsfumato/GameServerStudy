@@ -12,6 +12,10 @@ public:
 
 	virtual void Update() override
 	{
+		if (GetCurSceenType() == CLIENT_SCEEN_TYPE::DISCONNECT) {
+			m_LobbyList.reset();
+		}
+
 		if (GetCurSceenType() != CLIENT_SCEEN_TYPE::LOGIN) {
 			return;
 		}
@@ -79,6 +83,7 @@ public:
 			}
 		}
 		break;
+
 		default:
 			return false;
 		}

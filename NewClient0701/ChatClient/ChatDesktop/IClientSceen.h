@@ -5,6 +5,7 @@
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/widgets/textbox.hpp>
 #include <nana/gui/widgets/listbox.hpp>
+#include <nana/gui/widgets/tabbar.hpp>
 #include <nana/gui/timer.hpp>
 #include <nana/gui.hpp>
 
@@ -25,6 +26,7 @@ using PACKET_ID = NCommon::PACKET_ID;
 
 enum class CLIENT_SCEEN_TYPE
 {
+	DISCONNECT = -1,
 	CONNECT = 0,
 	LOGIN = 1,
 	LOBBY = 2,

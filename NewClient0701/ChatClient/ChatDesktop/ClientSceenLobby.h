@@ -18,6 +18,13 @@ public:
 
 	virtual void Update() override 
 	{
+		if ((GetCurSceenType() == CLIENT_SCEEN_TYPE::LOBBY) || (GetCurSceenType() == CLIENT_SCEEN_TYPE::ROOM))
+			return;
+
+		m_RoomList.clear();
+		SetRoomListGui();
+		m_UserList.clear();
+		SetUserListGui();
 	}
 
 	bool ProcessPacket(const short packetId, char* pData) override 
@@ -46,15 +53,20 @@ public:
 		{
 			auto pktRes = (NCommon::PktLobbyRoomListRes*)pData;
 
+			// 일단 받은 룸 목록은 업데이트를 합니다
 			for (int i = 0; i < pktRes->Count; ++i)
 			{
 				UpdateRoomInfo(&pktRes->RoomInfo[i]);
 			}
 
+			// case 1:
+			// 이 패킷이 끝이 아니라고 한다면, 마저 이어서 받을 수 있도록 새로 패킷을 전송합니다.
 			if (pktRes->IsEnd == false)
 			{
 				RequestRoomList(pktRes->RoomInfo[pktRes->Count - 1].RoomIndex + 1);
 			}
+			// case 2:
+			// 그게 아니라면 GUI를 세팅합시다
 			else
 			{
 				SetRoomListGui();
@@ -92,28 +104,82 @@ public:
 			SetCurSceenType(CLIENT_SCEEN_TYPE::ROOM);
 			RequestRoomList(0);
 			m_MakeRoomBtn->enabled(false);
+			m_EnterRoomBtn->caption("Leave Room");
 		}
 		break;
 
+		case (short) PACKET_ID::LOBBY_LEAVE_RES:
+		{
+			auto pktRes = (NCommon::PktRoomLeaveRes*)pData;
+			if (pktRes->ErrorCode != (short)NCommon::ERROR_CODE::NONE)
+			{
+				break;
+			}
+			SetCurSceenType(CLIENT_SCEEN_TYPE::LOBBY);
+			RequestRoomList(0);
+			m_MakeRoomBtn->enabled(true);
+			m_EnterRoomBtn->caption("Enter Room");
+		}
+		break;
 
+		case (short)PACKET_ID::LOBBY_CHAT_NTF:
+		{
+			auto pktRes = (NCommon::PktLobbyChatNtf*)pData;
+			wchar_t userID[NCommon::MAX_USER_ID_SIZE] = { 0 };
+			wchar_t msg[NCommon::MAX_LOBBY_CHAT_MSG_SIZE] = { 0 };
+
+			std::copy(&pktRes->UserID[0], &pktRes->UserID[NCommon::MAX_USER_ID_SIZE], &userID[0]);
+			std::copy(&pktRes->Msg[0], &pktRes->Msg[NCommon::MAX_LOBBY_CHAT_MSG_SIZE], &msg[0]);
+			AppendLobbyChat(std::wstring(userID), std::wstring(msg));
+		}
+		break;
+
+		// Notify! User Leave!
+		case (short)PACKET_ID::LOBBY_LEAVE_USER_NTF:
+		{
+			auto pktRes = (NCommon::PktLobbyLeaveUserInfoNtf*)pData;
+			wchar_t userID[17] = { 0 };
+			std::copy(&pktRes->UserID[0], &pktRes->UserID[17], &userID[0]);
+
+			std::wstring ntfMessage = userID;
+			ntfMessage += L"님이 Lobby를 떠나셨습니다.";
+
+			AppendLobbyChat(std::wstring(L"<System>"), ntfMessage);
+
+			UpdateUserInfo(true, pktRes->UserID);
+		}
+		break;
+
+		// Lobby Chat Res 
+		// 자신이 입력한 값이 올라간다
+		case (short)PACKET_ID::LOBBY_CHAT_RES:
+		{
+			auto pktRes = (NCommon::PktLobbyChatRes*)pData;
+			if (pktRes->ErrorCode != (short)NCommon::ERROR_CODE::NONE)
+			{
+				break;
+			}
+			
+			AppendLobbyChat(std::wstring(L"나"), m_LobbyChatInput->caption_wstring());
+			m_LobbyChatInput->reset();
+		}
+		break;
+		
 		case (short)PACKET_ID::ROOM_CHANGED_INFO_NTF:
 		{
 			auto pktRes = (NCommon::PktChangedRoomInfoNtf*)pData;
 			UpdateRoomInfo(&pktRes->RoomInfo);
 		}
-			break;
+		break;
+		
 		case (short)PACKET_ID::LOBBY_ENTER_USER_NTF:
 		{
 			auto pktRes = (NCommon::PktLobbyNewUserInfoNtf*)pData;
 			UpdateUserInfo(false, pktRes->UserID);
+			RequestUserList(0);
 		}
-			break;
-		case (short)PACKET_ID::LOBBY_LEAVE_USER_NTF:
-		{
-			auto pktRes = (NCommon::PktLobbyLeaveUserInfoNtf*)pData;
-			UpdateUserInfo(true, pktRes->UserID);
-		}
-			break;
+		break;
+		
 		default:
 			return false;
 		}
@@ -126,15 +192,34 @@ public:
 		m_pForm = pform;
 
 		m_LobbyChatList = std::make_shared<listbox>((form&)*m_pForm, nana::rectangle(700, 106, 200, 383));
-		m_LobbyChatList->append_header(L"text");
+		m_LobbyChatList->append_header(L"User");
+		m_LobbyChatList->append_header(L"Chat");
+
+		m_RoomChatList = std::make_shared<listbox>((form&)*m_pForm, nana::rectangle(700, 106, 200, 383));
+		m_RoomChatList->append_header(L"User");
+		m_RoomChatList->append_header(L"Chat");
+
+		//nana::listbox a = nana::listbox()
+		//m_ChatListTab = std::make_shared<tabbar<nana::listbox>>((form&)*m_pForm, nana::rectangle(700, 106, 200, 383));
+		//m_ChatListTab->append("LobbyChat", NULL, m_LobbyChatList);
+		//m_ChatListTab->append("LobbyChat", NULL, m_RoomChatList);
+		//m_ChatListTab->push_back("RoomChat");
+
+
+
+
 		
 		m_LobbyChatInput = std::make_shared<textbox>((form&)*m_pForm, nana::rectangle(700, 500, 200, 25));
 		m_LobbyChatInput->events().key_press([&](arg_keyboard ak) {
 			if (m_LobbyChatInput->focused() == false)
 				return;
-			
-			if (ak.key == 13)
-				SendLobbyChat();
+			if (ak.key != 13)
+				return;
+
+			std::wstring msg = m_LobbyChatInput->caption_wstring();
+			wchar_t pMsg[256] = { 0, };
+			std::copy(&msg[0], &msg[msg.size()], &pMsg[0]);
+			SendLobbyChat(pMsg, msg.size());
 		});
 
 		m_LobbyRoomList = std::make_shared<listbox>((form&)*m_pForm, nana::rectangle(204, 106, 345, 383));
@@ -151,10 +236,9 @@ public:
 		m_MakeRoomBtn = std::make_shared<button>((form&)*m_pForm, nana::rectangle(204, 500, 100, 25));
 		m_MakeRoomBtn->caption("Make Room");
 		m_MakeRoomBtn->events().click([&]() {
-			wchar_t roomName[MAX_ROOM_TITLE_SIZE] = { 0, };
-
-			auto title = m_MakeRoomName->caption_wstring().c_str();
-			
+			wchar_t roomName[MAX_ROOM_TITLE_SIZE] = { 0 };
+			std::wstring title = m_MakeRoomName->caption_wstring();
+			title.resize(MAX_ROOM_TITLE_SIZE);
 			std::copy(&title[0], &title[MAX_ROOM_TITLE_SIZE], &roomName[0]);
 			this->EnterRoom(true, roomName);
 		});
@@ -162,13 +246,27 @@ public:
 		m_EnterRoomBtn = std::make_shared<button>((form&)*m_pForm, nana::rectangle(310, 500, 100, 25));
 		m_EnterRoomBtn->caption("Enter Room");
 		m_EnterRoomBtn->events().click([&]() {
-			wchar_t roomName[MAX_ROOM_TITLE_SIZE] = { 0, };
-			/*auto room = m_LobbyRoomList->selected();
-			auto index = room[0].item;
-			auto roomIndex = m_LobbyRoomList->at(0).at(index).text(0).c_str();
-			wchar_t* roomName = m_LobbyRoomList->at(1).at(index).text(0).c_str();*/
-			this->EnterRoom(false, roomName);
+
+			if (GetCurSceenType() == CLIENT_SCEEN_TYPE::ROOM)
+			{
+				LeaveRoom();
+			}
+			else if(GetCurSceenType() == CLIENT_SCEEN_TYPE::LOBBY)
+			{
+				wchar_t roomName[MAX_ROOM_TITLE_SIZE] = { 0, };
+				/*auto room = m_LobbyRoomList->selected();
+				auto index = room[0].item;
+				auto roomIndex = m_LobbyRoomList->at(0).at(index).text(0).c_str();
+				wchar_t* roomName = m_LobbyRoomList->at(1).at(index).text(0).c_str();*/
+				this->EnterRoom(false, roomName);
+			}
 		});
+	}
+
+	void LeaveRoom()
+	{
+		NCommon::PktRoomLeaveReq reqPkt;
+		m_pRefNetwork->SendPacket((short)PACKET_ID::ROOM_LEAVE_REQ, sizeof(reqPkt), (char*)&reqPkt);
 	}
 
 	void EnterRoom(bool isCreate, wchar_t* roomName)
@@ -233,10 +331,13 @@ public:
 	}
 
 	// LOBBY에서의 채팅 기능 구현
-	void SendLobbyChat()
+	void SendLobbyChat(wchar_t* pMsg, int msgSize)
 	{
-		std::wstring test = m_LobbyChatInput->caption_wstring().c_str();
-		//auto pktReq = NCommon::P
+		std::wstring test = m_LobbyChatInput->caption_wstring();
+		
+		NCommon::PktLobbyChatReq reqPkt;
+		std::copy(&pMsg[0], &pMsg[msgSize], &reqPkt.Msg[0]);
+		m_pRefNetwork->SendPacket((short)PACKET_ID::LOBBY_CHAT_REQ, sizeof(reqPkt), (char*)&reqPkt);
 	}
 
 	void UpdateRoomInfo(NCommon::RoomSmallInfo* pRoomInfo)
@@ -246,7 +347,7 @@ public:
 		
 		bool IsRemove = newRoom.RoomUserCount == 0 ? true : false;
 
-		if (m_IsRoomListWorking)
+		if (m_IsRoomListWorking == true)
 		{
 			if (IsRemove == false)
 			{
@@ -348,11 +449,19 @@ public:
 		}
 	}
 
+	void AppendLobbyChat(std::wstring& userID, std::wstring& chatMsg)
+	{
+		//m_ChatListTab->at(0)->at(0)->append({ userID, chatMsg });
+		m_LobbyChatList->at(0)->append({ userID, chatMsg });
+	}
+
 private:
 	form* m_pForm = nullptr;
 	std::shared_ptr<listbox> m_LobbyRoomList;
 	std::shared_ptr<listbox> m_LobbyUserList;
 	
+	//std::shared_ptr<tabbar<std::shared_ptr<listbox>>> m_ChatListTab;
+	std::shared_ptr<listbox> m_RoomChatList;
 	std::shared_ptr<listbox> m_LobbyChatList;
 	std::shared_ptr<textbox> m_LobbyChatInput;
 	

@@ -5,6 +5,8 @@ namespace NCommon
 	// 21 이상부터 시작해야 한다!!!
 	enum class PACKET_ID : short
 	{
+		NONE = 0,
+
 		LOGIN_IN_REQ = 21,
 		LOGIN_IN_RES = 22,
 
@@ -41,6 +43,10 @@ namespace NCommon
 		ROOM_CHAT_REQ = 76,
 		ROOM_CHAT_RES = 77,
 		ROOM_CHAT_NTF = 78,
+
+		LOBBY_CHAT_REQ = 81,
+		LOBBY_CHAT_RES = 82,
+		LOBBY_CHAT_NTF = 83,
 
 		MAX = 256
 	};
