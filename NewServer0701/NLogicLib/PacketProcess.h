@@ -53,6 +53,8 @@ namespace NLogicLib
 		ERROR_CODE RoomEnter(PacketInfo packetInfo);
 		ERROR_CODE RoomLeave(PacketInfo packetInfo);
 		ERROR_CODE RoomChat(PacketInfo packetInfo);
+		
 		ERROR_CODE LobbyChat(PacketInfo packetInfo);
+		ERROR_CODE WhisperChat(PacketInfo packetInfo);
 	};
 }

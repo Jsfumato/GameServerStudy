@@ -4,7 +4,7 @@
 #include "ErrorCode.h"
 
 namespace NCommon
-{	
+{
 #pragma pack(push, 1)
 	struct PktHeader
 	{
@@ -23,8 +23,8 @@ namespace NCommon
 	const int MAX_USER_PASSWORD_SIZE = 16;
 	struct PktLogInReq
 	{
-		char szID[MAX_USER_ID_SIZE+1] = { 0, };
-		char szPW[MAX_USER_PASSWORD_SIZE+1] = { 0, };
+		char szID[MAX_USER_ID_SIZE + 1] = { 0, };
+		char szPW[MAX_USER_PASSWORD_SIZE + 1] = { 0, };
 	};
 
 	struct PktLogInRes : PktBase
@@ -63,7 +63,7 @@ namespace NCommon
 	{
 		short LobbyId;
 	};
-		
+
 	struct PktLobbyEnterRes : PktBase
 	{
 		short MaxUserCount;
@@ -74,7 +74,7 @@ namespace NCommon
 	//- 로비에 있는 유저에게 로비에 들어온 유저 통보
 	struct PktLobbyNewUserInfoNtf
 	{
-		char UserID[MAX_USER_ID_SIZE+1] = { 0, };
+		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
 	};
 
 
@@ -89,7 +89,7 @@ namespace NCommon
 	{
 		short RoomIndex;
 		short RoomUserCount;
-		wchar_t RoomTitle[MAX_ROOM_TITLE_SIZE+1] = { 0, };
+		wchar_t RoomTitle[MAX_ROOM_TITLE_SIZE + 1] = { 0, };
 	};
 
 	const int MAX_NTF_LOBBY_ROOM_LIST_COUNT = 12;
@@ -104,13 +104,13 @@ namespace NCommon
 	//- 로비의 유저 리스트 요청
 	struct PktLobbyUserListReq
 	{
-		short StartUserIndex; 
+		short StartUserIndex;
 	};
 
 	struct UserSmallInfo
 	{
 		short LobbyUserIndex;
-		char UserID[MAX_USER_ID_SIZE+1] = { 0, };
+		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
 	};
 
 	const int MAX_SEND_LOBBY_USER_LIST_COUNT = 32;
@@ -128,7 +128,7 @@ namespace NCommon
 	struct PktLobbyLeaveRes : PktBase
 	{
 	};
-	
+
 	//- 로비에서 나가는 유저 통보(로비에 있는 유저에게)
 	struct PktLobbyLeaveUserInfoNtf
 	{
@@ -174,7 +174,7 @@ namespace NCommon
 	{
 		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
 	};
-	
+
 
 	//- 룸 채팅
 	const int MAX_ROOM_CHAT_MSG_SIZE = 256;
@@ -185,6 +185,7 @@ namespace NCommon
 
 	struct PktRoomChatRes : PktBase
 	{
+		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
 	};
 
 	struct PktRoomChatNtf
@@ -194,7 +195,7 @@ namespace NCommon
 	};
 
 
-	//- 룸 채팅
+	//- 로비 채팅
 	const int MAX_LOBBY_CHAT_MSG_SIZE = 256;
 	struct PktLobbyChatReq
 	{
@@ -208,10 +209,29 @@ namespace NCommon
 	struct PktLobbyChatNtf
 	{
 		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
-		wchar_t Msg[MAX_LOBBY_CHAT_MSG_SIZE + 1] = { 0, };
+		wchar_t Msg[MAX_ROOM_CHAT_MSG_SIZE + 1] = { 0, };
+	};
+
+	//- 귓속말
+	const int MAX_WHISPER_CHAT_MSG_SIZE = 256;
+	struct PktWhisperReq
+	{
+		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
+		wchar_t Msg[MAX_WHISPER_CHAT_MSG_SIZE + 1] = { 0, };
+	};
+
+	struct PktWhisperRes : PktBase
+	{
+		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
+	};
+
+	struct PktWhisperNtf
+	{
+		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
+		wchar_t Msg[MAX_ROOM_CHAT_MSG_SIZE + 1] = { 0, };
 	};
 #pragma pack(pop)
 
 
-	
+
 }

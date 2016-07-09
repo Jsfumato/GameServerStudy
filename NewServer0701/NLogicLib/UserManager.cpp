@@ -26,7 +26,7 @@ namespace NLogicLib
 		pUser->Set(sessionIndex, userID);
 
 		m_UserSessionDic.insert({ sessionIndex, pUser });
-		m_UserIDDic.insert({ userID, pUser });
+		m_UserIDDic.insert({ pUser->GetID().c_str(), pUser });
 
 		return ERROR_CODE::NONE;
 	}
@@ -82,11 +82,18 @@ namespace NLogicLib
 
 	User* UserManager::FindUser(const char * userID)
 	{
-		auto result = m_UserIDDic.find(userID);
+		bool ret = true;
+		User* result = nullptr;
+		for (auto iter : m_UserIDDic)
+		{
+			ret = true;
+			auto comp1 = std::string(iter.first);
+			auto comp2 = std::string(userID);
 
-		if (result == m_UserIDDic.end())
-			return nullptr;
+			if (comp1.compare(comp2) == 0)
+				result = iter.second;
+		}
 
-		return result->second;
+		return result;
 	}
 }

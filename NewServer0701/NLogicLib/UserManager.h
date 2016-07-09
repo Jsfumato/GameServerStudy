@@ -20,14 +20,14 @@ namespace NLogicLib
 		ERROR_CODE AddUser(const int sessionIndex, const char* userID);
 		ERROR_CODE RemoveUser(const int sessionIndex);
 
+		User* FindUser(const int sessionIndex);
+		User* FindUser(const char* userID);
+
 		std::tuple<ERROR_CODE, User*> GetUser(const int sessionIndex);
 
 	private:
 		User* AllocNewUserIndex();
-
-		User* FindUser(const int sessionIndex);
-		User* FindUser(const char* userID);
-
+		
 		std::unordered_map<int, User*> m_UserSessionDic;
 		std::unordered_map<const char*, User*> m_UserIDDic;
 		

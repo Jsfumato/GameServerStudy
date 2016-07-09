@@ -48,6 +48,10 @@ namespace NCommon
 		LOBBY_CHAT_RES = 82,
 		LOBBY_CHAT_NTF = 83,
 
+		WHISPER_REQ = 85,
+		WHISPER_RES = 86,
+		WHISPER_NTF = 87,
+
 		MAX = 256
 	};
 

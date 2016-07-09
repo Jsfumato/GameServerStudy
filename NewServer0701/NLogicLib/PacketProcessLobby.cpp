@@ -224,4 +224,40 @@ namespace NLogicLib
 		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::LOBBY_CHAT_RES, sizeof(resPkt), (char*)&resPkt);
 		return (ERROR_CODE)__result;
 	}
+
+	ERROR_CODE PacketProcess::WhisperChat(PacketInfo packetInfo)
+	{
+	CHECK_START
+		auto reqPkt = (NCommon::PktWhisperReq*)packetInfo.pData;
+		NCommon::PktWhisperRes resPkt;
+
+		auto pUserRet = m_pUserManager->GetUser(packetInfo.sessionIndex);
+		auto errorCode = std::get<0>(pUserRet);
+		std::string srcUserID = std::get<User*>(pUserRet)->GetID();
+		if (errorCode != ERROR_CODE::NONE) {
+			CHECK_ERROR(errorCode);
+		}
+		auto pDestUser = m_pUserManager->FindUser(reqPkt->UserID);
+		if (pDestUser == nullptr) {
+			CHECK_ERROR(ERROR_CODE::USER_MGR_INVALID_SESSION_INDEX);
+		}
+
+		std::copy(&reqPkt->UserID[0], &reqPkt->UserID[NCommon::MAX_USER_ID_SIZE], &resPkt.UserID[0]);
+		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::WHISPER_RES, sizeof(resPkt), (char*)&resPkt);
+
+		//Notify
+		NCommon::PktWhisperNtf ntfPkt;
+
+		std::copy(&srcUserID[0], &srcUserID[srcUserID.size()],&ntfPkt.UserID[0]);
+		std::copy(&reqPkt->Msg[0], &reqPkt->Msg[NCommon::MAX_WHISPER_CHAT_MSG_SIZE], &ntfPkt.Msg[0]);
+		m_pNetwork->SendData(pDestUser->GetSessioIndex(), (short)PACKET_ID::WHISPER_NTF, sizeof(ntfPkt), (char*)&ntfPkt);
+
+		return ERROR_CODE::NONE;
+
+	CHECK_ERR:
+		resPkt.SetError(__result);
+		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::WHISPER_RES, sizeof(resPkt), (char*)&resPkt);
+		return (ERROR_CODE)__result;
+	}
+
 }
