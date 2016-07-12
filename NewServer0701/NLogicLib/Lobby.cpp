@@ -225,7 +225,8 @@ namespace NLogicLib
 	{
 		for (auto& pUser : m_UserIndexDic)
 		{
-			if (pUser.second->GetIndex() == passUserindex) {
+			//if (pUser.second->GetIndex() == passUserindex) {
+			if (pUser.second->GetSessioIndex() == passUserindex) {
 				continue;
 			}
 

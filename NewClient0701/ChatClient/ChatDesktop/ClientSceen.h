@@ -220,7 +220,5 @@ private:
 
 	std::shared_ptr<button> m_Loginbtn;
 
-
-
 	std::unique_ptr<textbox> m_ptxtCurState;
 };

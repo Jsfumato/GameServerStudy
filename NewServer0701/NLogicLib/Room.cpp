@@ -90,7 +90,8 @@ namespace NLogicLib
 	{
 		for (auto pUser : m_UserList)
 		{
-			if (pUser->GetIndex() == passUserindex) {
+			//if (pUser->GetIndex() == passUserindex) {
+			if (pUser->GetSessioIndex() == passUserindex) {
 				continue;
 			}
 
@@ -125,5 +126,43 @@ namespace NLogicLib
 		wcsncpy_s(pkt.Msg, NCommon::MAX_ROOM_CHAT_MSG_SIZE + 1, pszMsg, NCommon::MAX_ROOM_CHAT_MSG_SIZE);
 
 		SendToAllUser((short)PACKET_ID::ROOM_CHAT_NTF, sizeof(pkt), (char*)&pkt, sessionIndex);
+	}
+
+
+
+	ERROR_CODE Room::SendUserList(const int sessionId, const short startUserIndex)
+	{
+		if (startUserIndex < 0 || startUserIndex > (m_UserList.size() - 1)) {
+			return ERROR_CODE::LOBBY_USER_LIST_INVALID_START_USER_INDEX;
+		}
+
+		int lastCheckedIndex = 0;
+		NCommon::PktRoomUserListRes pktRes;
+		short userCount = 0;
+
+		for (int i = startUserIndex; i < m_UserList.size(); ++i)
+		{
+			auto& roomUser = m_UserList[i];
+			lastCheckedIndex = i;
+
+			pktRes.UserInfo[userCount].LobbyUserIndex = (short)i;
+			strncpy_s(pktRes.UserInfo[userCount].UserID, NCommon::MAX_USER_ID_SIZE + 1, roomUser->GetID().c_str(), NCommon::MAX_USER_ID_SIZE);
+
+			++userCount;
+
+			if (userCount >= NCommon::MAX_SEND_LOBBY_USER_LIST_COUNT) {
+				break;
+			}
+		}
+
+		pktRes.Count = userCount;
+
+		if (userCount <= 0 || (lastCheckedIndex + 1) == m_UserList.size()) {
+			pktRes.IsEnd = true;
+		}
+
+		m_pRefNetwork->SendData(sessionId, (short)PACKET_ID::ROOM_ENTER_USER_LIST_RES, sizeof(pktRes), (char*)&pktRes);
+
+		return ERROR_CODE::NONE;
 	}
 }

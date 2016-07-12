@@ -64,23 +64,41 @@ public:
 		{
 			auto pktRes = (NCommon::PktLobbyListRes*)pData;
 
-			if (pktRes->ErrorCode == (short)NCommon::ERROR_CODE::NONE)
+			if (pktRes->ErrorCode != (short)NCommon::ERROR_CODE::NONE)
 			{
+				std::cout << "[LOBBY_LIST_RES] ErrorCode: " << pktRes->ErrorCode << std::endl;
 				m_LobbyList->clear();
-
-				for (int i = 0; i < pktRes->LobbyCount; ++i)
-				{
-					auto& pLobby = pktRes->LobbyList[i];
-
-					m_LobbyList->at(0).append({ std::to_string(pLobby.LobbyId),
-													std::to_string(pLobby.LobbyUserCount), 
-													std::to_string(50) });
-				}
+				m_LobbyList->bgcolor(nana::colors::dim_gray);
+				break;
 			}
-			else
+			
+			m_LobbyList->clear();
+			for (int i = 0; i < pktRes->LobbyCount; ++i)
+			{
+				auto& pLobby = pktRes->LobbyList[i];
+				m_LobbyList->at(0).append({ 
+					std::to_string(pLobby.LobbyId),
+					std::to_string(pLobby.LobbyUserCount),
+					std::to_string(50) 
+				});
+			}
+
+		}
+		break;
+
+		case (short)PACKET_ID::LOBBY_LEAVE_RES:
+		{
+			auto pktRes = (NCommon::PktLobbyLeaveRes*)pData;
+
+			if (pktRes->ErrorCode != (short)NCommon::ERROR_CODE::NONE)
 			{
 				std::cout << "[LOBBY_LIST_RES] ErrorCode: " << pktRes->ErrorCode << std::endl;
 			}
+
+			SetCurSceenType(CLIENT_SCEEN_TYPE::LOGIN);
+			m_LobbyList->clear();
+			m_LobbyList->bgcolor(nana::colors::white);
+			RequestLobbyList();
 		}
 		break;
 

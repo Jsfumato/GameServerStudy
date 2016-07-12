@@ -37,7 +37,7 @@ void MainForm::CreateGUI()
 {
 	// https://moqups.com/   여기에서 디자인 하자
 
-	m_fm = std::make_unique<form>(API::make_center(900, 700));
+	m_fm = std::make_unique<form>(API::make_center(1300, 700));
 	m_fm->caption("Chat Client");
 
 	m_pClientSceen->CreateUI(m_fm.get());
@@ -45,11 +45,6 @@ void MainForm::CreateGUI()
 	m_pClientSceenLogin->CreateUI(m_fm.get());
 
 	m_pClientSceenLobby->CreateUI(m_fm.get());
-
-	
-	//m_ptxtCurState = std::make_unique<textbox>((form&)*m_fm.get(), nana::rectangle(450, 15, 120, 20));
-	//m_ptxtCurState->caption("State: Disconnect");
-	//m_ptxtCurState->bgcolor(nana::color(255, 0, 0));
 
 	m_RoomUserList = std::make_shared<listbox>((form&)*m_fm.get(), nana::rectangle(22, 522, 120, 166));
 	m_RoomUserList->append_header("UserID", 90);
@@ -61,19 +56,7 @@ void MainForm::CreateGUI()
 
 void MainForm::Update()
 {
-	//while (true)
-	//{
-	//	if (m_Network->IsConnected() == true)
-	//	{
-	//		m_ptxtCurState->caption("State: Connect");
-	//		m_ptxtCurState->bgcolor(nana::color(0, 255, 0));
-	//	}
-	//	else
-	//	{
-	//		m_ptxtCurState->caption("State: Disconnect");
-	//		m_ptxtCurState->bgcolor(nana::color(255, 0, 0));
-	//	}
-	//}
+
 }
 
 void MainForm::ShowModal()

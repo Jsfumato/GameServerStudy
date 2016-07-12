@@ -31,6 +31,8 @@ namespace NLogicLib
 		void SendToAllUser(const short packetId, const short dataSize, char* pData, const int passUserindex = -1);
 		void NotifyChat(const int sessionIndex, const char* pszUserID, const wchar_t* pszMsg);
 
+		ERROR_CODE SendUserList(const int sessionId, const short startUserIndex);
+
 		void NotifyEnterUserInfo(const int userIndex, const char* pszUserID);
 		void NotifyLeaveUserInfo(const char* pszUserID);
 

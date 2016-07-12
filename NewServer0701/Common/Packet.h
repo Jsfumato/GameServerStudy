@@ -161,6 +161,19 @@ namespace NCommon
 		char UserID[MAX_USER_ID_SIZE + 1] = { 0, };
 	};
 
+	//- 룸에 있는 유저 리스트
+	struct PktRoomUserListReq
+	{
+		short StartUserIndex;
+	};
+
+	const int MAX_SEND_ROOM_USER_LIST_COUNT = 32;
+	struct PktRoomUserListRes : PktBase
+	{
+		bool IsEnd = false; // true 이면 더 이상 리스트 요청을 하지 않는다
+		short Count = 0;
+		UserSmallInfo UserInfo[MAX_SEND_LOBBY_USER_LIST_COUNT];
+	};
 
 	//- 룸 나가기 요청
 	struct PktRoomLeaveReq {};

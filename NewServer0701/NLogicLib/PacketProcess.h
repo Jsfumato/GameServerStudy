@@ -56,5 +56,7 @@ namespace NLogicLib
 		
 		ERROR_CODE LobbyChat(PacketInfo packetInfo);
 		ERROR_CODE WhisperChat(PacketInfo packetInfo);
+
+		ERROR_CODE RoomUserList(PacketInfo packetInfo);
 	};
 }

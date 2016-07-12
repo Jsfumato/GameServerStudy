@@ -9,6 +9,7 @@
 #include "PacketProcess.h"
 
 using PACKET_ID = NCommon::PACKET_ID;
+using LOG_TYPE = NServerNetLib::LOG_TYPE;
 
 namespace NLogicLib
 {
@@ -183,4 +184,50 @@ namespace NLogicLib
 		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::ROOM_CHAT_RES, sizeof(resPkt), (char*)&resPkt);
 		return (ERROR_CODE)__result;
 	}
+
+	ERROR_CODE PacketProcess::RoomUserList(PacketInfo packetInfo)
+	{
+	CHECK_START
+		// 현재 로비에 있는지 조사한다.
+		// 유저 리스트를 보내준다.
+
+		auto pUserRet = m_pUserManager->GetUser(packetInfo.sessionIndex);
+		auto errorCode = std::get<0>(pUserRet);
+
+		if (errorCode != ERROR_CODE::NONE) {
+			CHECK_ERROR(errorCode);
+		}
+
+		auto pUser = std::get<1>(pUserRet);
+
+		if (pUser->IsCurDomainInRoom() == false) {
+			// 아직 고치지 않았음
+			CHECK_ERROR(ERROR_CODE::LOBBY_USER_LIST_INVALID_DOMAIN);
+		}
+
+		auto pLobby = m_pLobbyManager->GetLobby(pUser->GetLobbyIndex());
+		if (pLobby == nullptr) {
+			CHECK_ERROR(ERROR_CODE::LOBBY_USER_LIST_INVALID_LOBBY_INDEX);
+		}
+		
+		auto reqPkt = (NCommon::PktRoomUserListReq*)packetInfo.pData;
+
+		auto pRoom = pLobby->GetRoom(pUser->GetRoomIndex());
+		
+		auto sendRet = pRoom->SendUserList(pUser->GetSessioIndex(), reqPkt->StartUserIndex);
+		if (sendRet != ERROR_CODE::NONE) {
+			CHECK_ERROR(errorCode);
+		}
+
+		m_pLogger->Write(LOG_TYPE::L_TRACE, "%s | Req Room User List : %d", __FUNCTION__, packetInfo.sessionIndex);
+		return ERROR_CODE::NONE;
+
+	CHECK_ERR:
+		NCommon::PktLobbyUserListRes resPkt;
+		resPkt.SetError(__result);
+		m_pNetwork->SendData(packetInfo.sessionIndex, (short)PACKET_ID::LOBBY_ENTER_USER_LIST_RES, sizeof(NCommon::PktBase), (char*)&resPkt);
+		m_pLogger->Write(LOG_TYPE::L_ERROR, "%s | ERROR_CODE : %d", __FUNCTION__, resPkt.ErrorCode);
+		return (ERROR_CODE)__result;
+	}
+
 }
