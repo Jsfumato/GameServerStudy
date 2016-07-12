@@ -314,6 +314,7 @@ public:
 			if (pktRes->ErrorCode != (short)NCommon::ERROR_CODE::NONE)
 			{
 				AppendLobbyChat(std::wstring(L"<SYSTEM>"), std::wstring(L"귓속말이 실패했습니다"));
+				m_ChatInput->reset();
 				break;
 			}
 			wchar_t wSrcID[NCommon::MAX_USER_ID_SIZE];
@@ -386,7 +387,7 @@ public:
 			if (msg.size() == 0)
 				return;
 
-			if (msg[0] == L'/' && msg[1] == 'w')
+			if (msg[0] == L'/' && ((msg[1] == 'w') || (msg[1] == 'ㅈ')))
 			{
 				std::wstring destID;
 				/*std::wstring whisper;*/
