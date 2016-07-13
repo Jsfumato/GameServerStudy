@@ -276,7 +276,7 @@ public:
 			AppendLobbyChat(std::wstring(L"<System>"), ntfMessage);
 			UpdateUserInfo(true, pktRes->UserID, m_RoomUserList, m_RoomUserListBox);
 
-			RequestUserList(0);
+			RequestRoomUserList(0);
 		}
 		break;
 
